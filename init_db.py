@@ -3,7 +3,6 @@ Database initialization script for Giveaway Management Service
 """
 
 from app import app, db
-from models import Giveaway, GiveawayStats, GiveawayPublishingLog
 import logging
 
 logging.basicConfig(level=logging.INFO)
