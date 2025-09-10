@@ -64,18 +64,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Set db instance in models to avoid circular imports
-import models.giveaway
-import models.giveaway_stats  
-import models.publishing_log
-models.giveaway.db = db
-models.giveaway_stats.db = db
-models.publishing_log.db = db
+# Create model classes using factory functions
+from models.giveaway import create_giveaway_model
+from models.giveaway_stats import create_giveaway_stats_model
+from models.publishing_log import create_publishing_log_model
 
-# Import model classes directly after db is set
-from models.giveaway import Giveaway
-from models.giveaway_stats import GiveawayStats
-from models.publishing_log import GiveawayPublishingLog
+# Create model classes with db instance
+Giveaway = create_giveaway_model(db)
+GiveawayStats = create_giveaway_stats_model(db)
+GiveawayPublishingLog = create_publishing_log_model(db)
 
 # Import routes
 from routes.giveaways import giveaways_bp

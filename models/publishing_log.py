@@ -6,11 +6,11 @@ from datetime import datetime, timezone
 from sqlalchemy import Index
 from sqlalchemy.dialects.postgresql import JSONB
 
-# This will be set by the app
-db = None
-
-class GiveawayPublishingLog(db.Model):
-    __tablename__ = 'giveaway_publishing_log'
+def create_publishing_log_model(db):
+    """Factory function to create GiveawayPublishingLog model with db instance"""
+    
+    class GiveawayPublishingLog(db.Model):
+        __tablename__ = 'giveaway_publishing_log'
     
     # Primary key
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
@@ -114,4 +114,6 @@ class GiveawayPublishingLog(db.Model):
     def __repr__(self):
         status = "SUCCESS" if self.success else "FAILED"
         return f'<GiveawayPublishingLog {self.id}: {self.action.upper()} - {status}>'
+    
+    return GiveawayPublishingLog
 

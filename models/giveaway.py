@@ -7,11 +7,11 @@ from sqlalchemy import Column, BigInteger, Integer, String, Text, Boolean, DateT
 from flask_sqlalchemy import SQLAlchemy
 import secrets
 
-# This will be set by the app
-db = None
-
-class Giveaway(db.Model):
-    __tablename__ = 'giveaways'
+def create_giveaway_model(db):
+    """Factory function to create Giveaway model with db instance"""
+    
+    class Giveaway(db.Model):
+        __tablename__ = 'giveaways'
     
     # Primary key
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
@@ -133,6 +133,8 @@ class Giveaway(db.Model):
         self.loser_message = loser_message
         self.messages_ready_for_finish = True
     
-    def __repr__(self):
-        return f'<Giveaway {self.id}: {self.title} ({self.status})>'
+        def __repr__(self):
+            return f'<Giveaway {self.id}: {self.title} ({self.status})>'
+    
+    return Giveaway
 

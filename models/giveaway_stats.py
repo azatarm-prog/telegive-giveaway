@@ -5,11 +5,11 @@ GiveawayStats model - For performance tracking and statistics
 from datetime import datetime, timezone
 from sqlalchemy import Index
 
-# This will be set by the app
-db = None
-
-class GiveawayStats(db.Model):
-    __tablename__ = 'giveaway_stats'
+def create_giveaway_stats_model(db):
+    """Factory function to create GiveawayStats model with db instance"""
+    
+    class GiveawayStats(db.Model):
+        __tablename__ = 'giveaway_stats'
     
     # Primary key
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
@@ -80,4 +80,6 @@ class GiveawayStats(db.Model):
     
     def __repr__(self):
         return f'<GiveawayStats {self.id}: Giveaway {self.giveaway_id} - {self.total_participants} participants>'
+    
+    return GiveawayStats
 
