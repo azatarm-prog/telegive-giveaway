@@ -64,7 +64,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Import models after db initialization
+# Set db instance in models to avoid circular imports
+import models.giveaway
+import models.giveaway_stats  
+import models.publishing_log
+models.giveaway.db = db
+models.giveaway_stats.db = db
+models.publishing_log.db = db
+
+# Import models after db is set
 from models import Giveaway, GiveawayStats, GiveawayPublishingLog
 
 # Import routes

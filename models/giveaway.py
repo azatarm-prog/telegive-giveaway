@@ -4,11 +4,11 @@ Giveaway model - Primary responsibility of the Giveaway Management Service
 
 from datetime import datetime, timezone
 from sqlalchemy import Column, BigInteger, Integer, String, Text, Boolean, DateTime, CheckConstraint, Index
-from sqlalchemy.ext.declarative import declarative_base
-from app import db
+from flask_sqlalchemy import SQLAlchemy
 import secrets
 
-Base = declarative_base()
+# This will be set by the app
+db = None
 
 class Giveaway(db.Model):
     __tablename__ = 'giveaways'

@@ -5,7 +5,9 @@ GiveawayPublishingLog model - For tracking publishing operations and audit trail
 from datetime import datetime, timezone
 from sqlalchemy import Index
 from sqlalchemy.dialects.postgresql import JSONB
-from app import db
+
+# This will be set by the app
+db = None
 
 class GiveawayPublishingLog(db.Model):
     __tablename__ = 'giveaway_publishing_log'

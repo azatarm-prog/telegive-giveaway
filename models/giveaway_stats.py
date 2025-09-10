@@ -4,7 +4,9 @@ GiveawayStats model - For performance tracking and statistics
 
 from datetime import datetime, timezone
 from sqlalchemy import Index
-from app import db
+
+# This will be set by the app
+db = None
 
 class GiveawayStats(db.Model):
     __tablename__ = 'giveaway_stats'
