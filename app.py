@@ -85,6 +85,10 @@ routes.giveaways.Giveaway = Giveaway
 routes.giveaways.GiveawayStats = GiveawayStats
 routes.giveaways.GiveawayPublishingLog = GiveawayPublishingLog
 
+# Set dependencies for health routes
+routes.health.db = db
+routes.health.Giveaway = Giveaway
+
 # Import blueprints after dependencies are set
 from routes.giveaways import giveaways_bp
 from routes.health import health_bp

@@ -3,13 +3,16 @@ Health check routes for the Giveaway Management Service
 """
 
 from flask import Blueprint, jsonify
-from app import db
 from services import AuthService, ChannelService, ParticipantService, BotService, MediaService
 import logging
 
 logger = logging.getLogger(__name__)
 
 health_bp = Blueprint('health', __name__)
+
+# These will be set by the app after initialization
+db = None
+Giveaway = None
 
 @health_bp.route('/health', methods=['GET'])
 def health_check():
@@ -81,7 +84,6 @@ def database_health():
         db.session.commit()
         
         # Test table access
-        from models import Giveaway
         giveaway_count = Giveaway.query.count()
         
         return jsonify({
