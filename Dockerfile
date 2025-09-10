@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     libpq-dev \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -33,9 +32,9 @@ RUN mkdir -p logs
 RUN useradd --create-home --shell /bin/bash app && chown -R app:app /app
 USER app
 
-# Expose port
-EXPOSE 8003
+# Don't expose a specific port - let Railway handle it
+# EXPOSE will be set by Railway automatically
 
-# Run the application using startup script
-CMD ["./start.sh"]
+# Simple command - let app.py handle PORT variable
+CMD ["python", "app.py"]
 

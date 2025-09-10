@@ -126,7 +126,17 @@ def create_tables():
         logger.info("Database tables created successfully")
 
 if __name__ == '__main__':
-    create_tables()
-    port = int(os.getenv('PORT', 8003))
+    # Robust port handling as recommended in troubleshooting guide
+    port = os.getenv('PORT')
+    if port:
+        try:
+            port = int(port)
+        except ValueError:
+            print(f"Invalid PORT value: {port}, using default 8003")
+            port = 8003
+    else:
+        port = 8003
+    
+    print(f"Starting Telegive Giveaway Service on port: {port}")
     app.run(host='0.0.0.0', port=port, debug=os.getenv('FLASK_ENV') == 'development')
 
