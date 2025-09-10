@@ -75,6 +75,17 @@ GiveawayStats = create_giveaway_stats_model(db)
 GiveawayPublishingLog = create_publishing_log_model(db)
 
 # Import routes
+import routes.giveaways
+import routes.health
+
+# Set dependencies in routes to avoid circular imports
+routes.giveaways.db = db
+routes.giveaways.limiter = limiter
+routes.giveaways.Giveaway = Giveaway
+routes.giveaways.GiveawayStats = GiveawayStats
+routes.giveaways.GiveawayPublishingLog = GiveawayPublishingLog
+
+# Import blueprints after dependencies are set
 from routes.giveaways import giveaways_bp
 from routes.health import health_bp
 

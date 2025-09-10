@@ -9,14 +9,20 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timezone
 import logging
 
-from app import db, limiter
-from models import Giveaway, GiveawayStats, GiveawayPublishingLog
+# Import services and utils (no circular dependency)
 from services import AuthService, ChannelService, ParticipantService, BotService, MediaService
 from utils import GiveawayValidator, TokenGenerator, StatusManager
 
 logger = logging.getLogger(__name__)
 
 giveaways_bp = Blueprint('giveaways', __name__)
+
+# These will be set by the app after initialization
+db = None
+limiter = None
+Giveaway = None
+GiveawayStats = None
+GiveawayPublishingLog = None
 
 @giveaways_bp.route('/create', methods=['POST'])
 @limiter.limit("5 per hour")
