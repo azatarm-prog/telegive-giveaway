@@ -3,6 +3,7 @@ Health check routes for the Giveaway Management Service
 """
 
 from flask import Blueprint, jsonify
+from sqlalchemy import text
 from services import AuthService, ChannelService, ParticipantService, BotService, MediaService
 import logging
 
@@ -24,7 +25,7 @@ def health_check():
         # Check database connectivity
         db_status = 'connected'
         try:
-            db.session.execute('SELECT 1')
+            db.session.execute(text('SELECT 1'))
             db.session.commit()
         except Exception as e:
             logger.error(f"Database health check failed: {e}")
@@ -80,7 +81,7 @@ def database_health():
     """
     try:
         # Test database connection
-        db.session.execute('SELECT 1')
+        db.session.execute(text('SELECT 1'))
         db.session.commit()
         
         # Test table access
@@ -160,7 +161,7 @@ def readiness_check():
         
         # Database must be accessible
         try:
-            db.session.execute('SELECT 1')
+            db.session.execute(text('SELECT 1'))
             db.session.commit()
         except Exception as e:
             ready = False
