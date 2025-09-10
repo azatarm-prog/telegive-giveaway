@@ -72,8 +72,10 @@ models.giveaway.db = db
 models.giveaway_stats.db = db
 models.publishing_log.db = db
 
-# Import models after db is set
-from models import Giveaway, GiveawayStats, GiveawayPublishingLog
+# Import model classes directly after db is set
+from models.giveaway import Giveaway
+from models.giveaway_stats import GiveawayStats
+from models.publishing_log import GiveawayPublishingLog
 
 # Import routes
 from routes.giveaways import giveaways_bp
