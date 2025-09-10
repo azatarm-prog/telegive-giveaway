@@ -25,7 +25,6 @@ GiveawayStats = None
 GiveawayPublishingLog = None
 
 @giveaways_bp.route('/create', methods=['POST'])
-@limiter.limit("5 per hour")
 def create_giveaway():
     """
     Create a new giveaway
@@ -150,7 +149,6 @@ def create_giveaway():
         }), 500
 
 @giveaways_bp.route('/active/<int:account_id>', methods=['GET'])
-@limiter.limit("100 per hour")
 def get_active_giveaway(account_id):
     """
     Get active giveaway for account
@@ -203,7 +201,6 @@ def get_active_giveaway(account_id):
         }), 500
 
 @giveaways_bp.route('/<int:giveaway_id>/publish', methods=['POST'])
-@limiter.limit("10 per hour")
 def publish_giveaway(giveaway_id):
     """
     Publish giveaway to Telegram channel
@@ -320,7 +317,6 @@ def publish_giveaway(giveaway_id):
         }), 500
 
 @giveaways_bp.route('/<int:giveaway_id>/finish-messages', methods=['PUT'])
-@limiter.limit("10 per hour")
 def update_finish_messages(giveaway_id):
     """
     Update finish messages for giveaway
@@ -399,7 +395,6 @@ def update_finish_messages(giveaway_id):
         }), 500
 
 @giveaways_bp.route('/<int:giveaway_id>/finish', methods=['POST'])
-@limiter.limit("10 per hour")
 def finish_giveaway(giveaway_id):
     """
     Finish giveaway and select winners
@@ -530,7 +525,6 @@ def finish_giveaway(giveaway_id):
 
 
 @giveaways_bp.route('/history/<int:account_id>', methods=['GET'])
-@limiter.limit("100 per hour")
 def get_giveaway_history(account_id):
     """
     Get giveaway history for account
@@ -600,7 +594,6 @@ def get_giveaway_history(account_id):
         }), 500
 
 @giveaways_bp.route('/<int:giveaway_id>/stats', methods=['GET'])
-@limiter.limit("200 per hour")
 def get_giveaway_stats(giveaway_id):
     """
     Get giveaway statistics
@@ -653,7 +646,6 @@ def get_giveaway_stats(giveaway_id):
         }), 500
 
 @giveaways_bp.route('/by-token/<string:result_token>', methods=['GET'])
-@limiter.limit("200 per hour")
 def get_giveaway_by_token(result_token):
     """
     Get giveaway by result token
@@ -707,7 +699,6 @@ def get_giveaway_by_token(result_token):
         }), 500
 
 @giveaways_bp.route('/<int:giveaway_id>', methods=['GET'])
-@limiter.limit("200 per hour")
 def get_giveaway(giveaway_id):
     """
     Get giveaway details
@@ -759,7 +750,6 @@ def get_giveaway(giveaway_id):
         }), 500
 
 @giveaways_bp.route('/<int:giveaway_id>/logs', methods=['GET'])
-@limiter.limit("100 per hour")
 def get_giveaway_logs(giveaway_id):
     """
     Get giveaway publishing logs
@@ -805,7 +795,6 @@ def get_giveaway_logs(giveaway_id):
         }), 500
 
 @giveaways_bp.route('/<int:giveaway_id>/validate', methods=['GET'])
-@limiter.limit("100 per hour")
 def validate_giveaway_state(giveaway_id):
     """
     Validate giveaway state and consistency

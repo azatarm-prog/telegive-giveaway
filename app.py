@@ -93,6 +93,9 @@ from routes.health import health_bp
 app.register_blueprint(giveaways_bp, url_prefix='/api/giveaways')
 app.register_blueprint(health_bp)
 
+# Apply rate limiting to the giveaways blueprint
+limiter.limit("100 per hour")(giveaways_bp)
+
 # Error handlers
 @app.errorhandler(400)
 def bad_request(error):
