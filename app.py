@@ -39,7 +39,9 @@ app.config['TELEGIVE_MEDIA_URL'] = os.getenv('TELEGIVE_MEDIA_URL', 'http://local
 # External APIs
 app.config['TELEGRAM_API_BASE'] = os.getenv('TELEGRAM_API_BASE', 'https://api.telegram.org')
 
-# Configuration
+# Service configuration
+app.config['SERVICE_NAME'] = os.getenv('SERVICE_NAME', 'giveaway-service')
+app.config['SERVICE_PORT'] = int(os.getenv('SERVICE_PORT', '8003'))
 app.config['MAX_WINNER_COUNT'] = int(os.getenv('MAX_WINNER_COUNT', '100'))
 app.config['RESULT_TOKEN_LENGTH'] = int(os.getenv('RESULT_TOKEN_LENGTH', '32'))
 app.config['CLEANUP_DELAY_MINUTES'] = int(os.getenv('CLEANUP_DELAY_MINUTES', '5'))
@@ -126,17 +128,17 @@ def create_tables():
         logger.info("Database tables created successfully")
 
 if __name__ == '__main__':
-    # Robust port handling as recommended in troubleshooting guide
-    port = os.getenv('PORT')
-    if port:
-        try:
-            port = int(port)
-        except ValueError:
-            print(f"Invalid PORT value: {port}, using default 8003")
-            port = 8003
-    else:
-        port = 8003
+    # Get configuration from environment
+    port = int(os.getenv('PORT', app.config['SERVICE_PORT']))
+    debug = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
     
-    print(f"Starting Telegive Giveaway Service on port: {port}")
-    app.run(host='0.0.0.0', port=port, debug=os.getenv('FLASK_ENV') == 'development')
+    logger.info(f"Starting Giveaway Management Service on port {port}")
+    
+    # Run the application
+    app.run(
+        host='0.0.0.0',  # Listen on all interfaces for deployment
+        port=port,
+        debug=debug,
+        threaded=True
+    )
 
