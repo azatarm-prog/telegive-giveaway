@@ -33,13 +33,9 @@ RUN mkdir -p logs
 RUN useradd --create-home --shell /bin/bash app && chown -R app:app /app
 USER app
 
-# Expose port (Railway will set the PORT env var)
+# Expose port
 EXPOSE 8003
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8003}/health || exit 1
-
-# Run the application - let Railway handle the port
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-8003} --workers 4 --timeout 120 app:app"]
+# Run the application using startup script
+CMD ["./start.sh"]
 
