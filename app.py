@@ -93,15 +93,20 @@ routes.health.Giveaway = Giveaway
 import routes.admin
 routes.admin.db = db
 
+# Import debug routes
+import routes.debug
+
 # Import blueprints after dependencies are set
 from routes.giveaways import giveaways_bp
 from routes.health import health_bp
 from routes.admin import admin_bp
+from routes.debug import debug_bp
 
 # Register blueprints
 app.register_blueprint(giveaways_bp, url_prefix='/api/giveaways')
 app.register_blueprint(health_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(debug_bp)
 
 # Apply rate limiting to the giveaways blueprint
 limiter.limit("100 per hour")(giveaways_bp)
