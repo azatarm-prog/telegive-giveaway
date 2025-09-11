@@ -52,30 +52,52 @@ def create_giveaway():
         account_id = data['account_id']
         
         # Validate account exists and is active
-        account_validation = AuthService.validate_account(account_id)
-        if not account_validation.get('success', False):
+        logger.info(f"Validating account {account_id} for giveaway creation")
+        try:
+            account_validation = AuthService.validate_account(account_id)
+            logger.info(f"Account validation result: {account_validation}")
+            
+            if not account_validation.get('success', False):
+                logger.warning(f"Account validation failed for {account_id}: {account_validation}")
+                return jsonify({
+                    'success': False,
+                    'error': account_validation.get('error', 'Account validation failed'),
+                    'error_code': account_validation.get('error_code', 'ACCOUNT_VALIDATION_FAILED')
+                }), 400
+        except Exception as e:
+            logger.error(f"Exception during account validation for {account_id}: {e}")
             return jsonify({
                 'success': False,
-                'error': account_validation.get('error', 'Account validation failed'),
-                'error_code': account_validation.get('error_code', 'ACCOUNT_VALIDATION_FAILED')
-            }), 400
+                'error': f'Account validation error: {str(e)}',
+                'error_code': 'ACCOUNT_VALIDATION_ERROR'
+            }), 500
         
         # Check single active giveaway limit
-        existing_active = Giveaway.query.filter_by(
-            account_id=account_id,
-            status='active'
-        ).first()
-        
-        if existing_active:
+        logger.info(f"Checking for existing active giveaways for account {account_id}")
+        try:
+            existing_active = Giveaway.query.filter_by(
+                account_id=account_id,
+                status='active'
+            ).first()
+            
+            if existing_active:
+                logger.warning(f"Account {account_id} already has active giveaway {existing_active.id}")
+                return jsonify({
+                    'success': False,
+                    'error': f'Account {account_id} already has an active giveaway',
+                    'error_code': 'SINGLE_ACTIVE_LIMIT_EXCEEDED',
+                    'details': {
+                        'active_giveaway_id': existing_active.id,
+                        'account_id': account_id
+                    }
+                }), 409
+        except Exception as e:
+            logger.error(f"Database error checking active giveaways for {account_id}: {e}")
             return jsonify({
                 'success': False,
-                'error': f'Account {account_id} already has an active giveaway',
-                'error_code': 'SINGLE_ACTIVE_LIMIT_EXCEEDED',
-                'details': {
-                    'active_giveaway_id': existing_active.id,
-                    'account_id': account_id
-                }
-            }), 409
+                'error': f'Database error: {str(e)}',
+                'error_code': 'DATABASE_ERROR'
+            }), 500
         
         # Validate media file if provided
         media_file_id = data.get('media_file_id')
