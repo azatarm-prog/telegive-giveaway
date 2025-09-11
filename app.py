@@ -30,7 +30,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 }
 
 # Service URLs
-app.config['TELEGIVE_AUTH_URL'] = os.getenv('TELEGIVE_AUTH_URL', 'http://localhost:8001')
+app.config['TELEGIVE_AUTH_URL'] = os.getenv('TELEGIVE_AUTH_URL', 'https://web-production-ddd7e.up.railway.app')
 app.config['TELEGIVE_CHANNEL_URL'] = os.getenv('TELEGIVE_CHANNEL_URL', 'http://localhost:8002')
 app.config['TELEGIVE_PARTICIPANT_URL'] = os.getenv('TELEGIVE_PARTICIPANT_URL', 'http://localhost:8004')
 app.config['TELEGIVE_BOT_URL'] = os.getenv('TELEGIVE_BOT_URL', 'http://localhost:8005')

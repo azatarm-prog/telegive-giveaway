@@ -33,8 +33,11 @@ class AuthService:
             Dict with success status and account info
         """
         try:
-            auth_url = current_app.config['TELEGIVE_AUTH_URL']
-            url = f"{auth_url}/api/accounts/{account_id}/validate"
+            # Use the correct Auth Service URL and endpoint
+            auth_url = current_app.config.get('TELEGIVE_AUTH_URL', 'https://web-production-ddd7e.up.railway.app')
+            url = f"{auth_url}/api/v1/bots/validate/{account_id}"
+            
+            logger.info(f"Validating account {account_id} at {url}")
             
             response = requests.get(
                 url,
@@ -44,10 +47,39 @@ class AuthService:
             
             if response.ok:
                 data = response.json()
-                logger.info(f"Account {account_id} validation successful")
-                return data
+                logger.info(f"Account {account_id} validation successful: {data}")
+                
+                # Handle the correct response format from Auth Service
+                if data.get('valid', False):
+                    return {
+                        'success': True,
+                        'valid': True,
+                        'account_id': data.get('bot_id'),
+                        'username': data.get('bot_username'),
+                        'name': data.get('bot_name')
+                    }
+                else:
+                    return {
+                        'success': False,
+                        'error': 'Account is not valid',
+                        'error_code': 'ACCOUNT_INVALID'
+                    }
+            elif response.status_code == 404:
+                logger.warning(f"Account {account_id} not found")
+                return {
+                    'success': False,
+                    'error': 'Account not found',
+                    'error_code': 'ACCOUNT_NOT_FOUND'
+                }
+            elif response.status_code == 403:
+                logger.warning(f"Account {account_id} is inactive")
+                return {
+                    'success': False,
+                    'error': 'Account inactive',
+                    'error_code': 'ACCOUNT_INACTIVE'
+                }
             else:
-                logger.error(f"Account {account_id} validation failed: {response.status_code}")
+                logger.error(f"Account {account_id} validation failed: {response.status_code} - {response.text}")
                 return {
                     'success': False,
                     'error': f'Account validation failed: {response.status_code}',
@@ -175,11 +207,19 @@ class AuthService:
             Boolean indicating service health
         """
         try:
-            auth_url = current_app.config['TELEGIVE_AUTH_URL']
+            # Use the correct Auth Service URL
+            auth_url = current_app.config.get('TELEGIVE_AUTH_URL', 'https://web-production-ddd7e.up.railway.app')
             url = f"{auth_url}/health"
             
             response = requests.get(url, timeout=5)
-            return response.ok and response.json().get('status') == 'healthy'
+            if response.ok:
+                # Try to get JSON response, fallback to status code check
+                try:
+                    data = response.json()
+                    return data.get('status') == 'healthy' or data.get('alive', False)
+                except:
+                    return True  # If no JSON, but 200 OK, consider healthy
+            return False
             
         except Exception as e:
             logger.error(f"Auth service health check failed: {e}")
