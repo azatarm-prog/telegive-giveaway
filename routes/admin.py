@@ -53,8 +53,9 @@ def init_database():
             id BIGSERIAL PRIMARY KEY,
             giveaway_id BIGINT NOT NULL REFERENCES giveaways(id) ON DELETE CASCADE,
             total_participants INTEGER DEFAULT 0,
-            unique_participants INTEGER DEFAULT 0,
-            winners_selected INTEGER DEFAULT 0,
+            captcha_completed_participants INTEGER DEFAULT 0,
+            winner_count INTEGER DEFAULT 0,
+            messages_delivered INTEGER DEFAULT 0,
             last_updated TIMESTAMPTZ DEFAULT NOW()
         );
         """
@@ -84,6 +85,11 @@ def init_database():
         ]
         
         # Execute table creation
+        logger.info("Dropping existing tables to ensure correct schema...")
+        db.session.execute(text("DROP TABLE IF EXISTS giveaway_publishing_log CASCADE;"))
+        db.session.execute(text("DROP TABLE IF EXISTS giveaway_stats CASCADE;"))
+        db.session.execute(text("DROP TABLE IF EXISTS giveaways CASCADE;"))
+        
         logger.info("Creating giveaways table...")
         db.session.execute(text(create_giveaways_table))
         
