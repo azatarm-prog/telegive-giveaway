@@ -164,6 +164,10 @@ def create_giveaway():
     except Exception as e:
         db.session.rollback()
         logger.error(f"Unexpected error in giveaway creation: {e}")
+        logger.error(f"Exception type: {type(e).__name__}")
+        logger.error(f"Exception args: {e.args}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({
             'success': False,
             'error': 'Internal server error',
