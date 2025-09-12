@@ -95,6 +95,7 @@ routes.admin.db = db
 
 # Import debug routes
 import routes.debug
+import routes.debug_create
 
 # Import test routes
 import routes.test_endpoint
@@ -104,6 +105,7 @@ from routes.giveaways import giveaways_bp
 from routes.health import health_bp
 from routes.admin import admin_bp
 from routes.debug import debug_bp
+from routes.debug_create import debug_create_bp
 from routes.test_endpoint import test_bp
 
 # Register blueprints
@@ -111,6 +113,7 @@ app.register_blueprint(giveaways_bp, url_prefix='/api/giveaways')
 app.register_blueprint(health_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(debug_bp)
+app.register_blueprint(debug_create_bp)
 app.register_blueprint(test_bp)
 
 # Apply rate limiting to the giveaways blueprint
