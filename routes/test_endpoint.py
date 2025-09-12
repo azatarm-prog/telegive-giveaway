@@ -47,6 +47,10 @@ def test_config():
     try:
         config_info = {
             'TELEGIVE_AUTH_URL': current_app.config.get('TELEGIVE_AUTH_URL'),
+            'TELEGIVE_CHANNEL_URL': current_app.config.get('TELEGIVE_CHANNEL_URL'),
+            'TELEGIVE_BOT_URL': current_app.config.get('TELEGIVE_BOT_URL'),
+            'TELEGIVE_PARTICIPANT_URL': current_app.config.get('TELEGIVE_PARTICIPANT_URL'),
+            'TELEGIVE_MEDIA_URL': current_app.config.get('TELEGIVE_MEDIA_URL'),
             'SERVICE_NAME': current_app.config.get('SERVICE_NAME'),
             'SERVICE_PORT': current_app.config.get('SERVICE_PORT'),
             'DATABASE_URL': 'SET' if current_app.config.get('SQLALCHEMY_DATABASE_URI') else 'NOT_SET'
