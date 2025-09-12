@@ -14,7 +14,7 @@ def create_giveaway_model(db):
         __tablename__ = 'giveaways'
         
         # Primary key
-        id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+        id = db.Column(db.BigInteger, primary_key=True, autoincrement=True, nullable=False)
         account_id = db.Column(db.BigInteger, nullable=False)
         
         # Giveaway content
@@ -57,9 +57,10 @@ def create_giveaway_model(db):
         )
         
         def __init__(self, **kwargs):
+            # Generate result_token if not provided
+            if 'result_token' not in kwargs or not kwargs['result_token']:
+                kwargs['result_token'] = self.generate_result_token()
             super().__init__(**kwargs)
-            if not self.result_token:
-                self.result_token = self.generate_result_token()
         
         @staticmethod
         def generate_result_token(length=32):

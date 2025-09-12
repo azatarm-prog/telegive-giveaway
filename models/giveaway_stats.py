@@ -29,8 +29,8 @@ def create_giveaway_stats_model(db):
             Index('idx_giveaway_stats_giveaway_id', 'giveaway_id'),
         )
         
-        # Relationship
-        giveaway = db.relationship('Giveaway', backref=db.backref('stats', uselist=False, cascade='all, delete-orphan'))
+        # Note: Relationship removed to avoid conflicts with factory functions
+        # Access giveaway via direct query if needed: Giveaway.query.get(self.giveaway_id)
         
         def __init__(self, giveaway_id, **kwargs):
             super().__init__(giveaway_id=giveaway_id, **kwargs)
