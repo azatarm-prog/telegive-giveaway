@@ -52,16 +52,23 @@ class ChannelService:
                 data = response.json()
                 logger.info(f"Channel config retrieved successfully for account {account_id}")
                 
-                # Extract the config from the response
-                config = data.get('config', {})
-                if config:
+                # Extract the channel from the response (actual format)
+                channel = data.get('channel', {})
+                if channel:
+                    # Map the response to expected config format
+                    config = {
+                        'username': channel.get('channel_username'),
+                        'title': channel.get('channel_title'),
+                        'isVerified': channel.get('is_verified', False),
+                        'botHasAdminRights': True  # Assume true if channel is configured
+                    }
                     logger.info(f"Channel config details: username={config.get('username')}, verified={config.get('isVerified')}, adminRights={config.get('botHasAdminRights')}")
                     return {
                         'success': True,
                         'config': config
                     }
                 else:
-                    logger.warning(f"No channel config found for account {account_id}")
+                    logger.warning(f"No channel found for account {account_id}")
                     return {
                         'success': False,
                         'error': 'Channel not configured',
