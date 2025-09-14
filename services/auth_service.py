@@ -18,7 +18,8 @@ class AuthService:
         """Get standard headers for inter-service communication"""
         return {
             'Content-Type': 'application/json',
-            'X-Service-Name': 'telegive-giveaway'
+            'X-Service-Name': 'telegive-giveaway',
+            'X-Service-Token': 'ch4nn3l_s3rv1c3_t0k3n_2025_s3cur3_r4nd0m_str1ng'
         }
     
     @staticmethod
