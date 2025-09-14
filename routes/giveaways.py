@@ -335,12 +335,28 @@ def publish_giveaway(giveaway_id):
         
         logger.info(f"Giveaway {giveaway.id} published successfully with message ID {message_id}")
         
-        return jsonify({
+        # Prepare response with all relevant information
+        response_data = {
             'success': True,
             'message_id': message_id,
             'published_at': published_at.isoformat(),
             'media_cleanup_triggered': media_cleanup_triggered
-        }), 200
+        }
+        
+        # Include additional information from Bot Service if available
+        if posting_result.get('bot_username'):
+            response_data['bot_username'] = posting_result.get('bot_username')
+        
+        if posting_result.get('participation_url'):
+            response_data['participation_url'] = posting_result.get('participation_url')
+        
+        if posting_result.get('channel_username'):
+            response_data['channel_username'] = posting_result.get('channel_username')
+        
+        if posting_result.get('telegram_url'):
+            response_data['telegram_url'] = posting_result.get('telegram_url')
+        
+        return jsonify(response_data), 200
         
     except Exception as e:
         db.session.rollback()
