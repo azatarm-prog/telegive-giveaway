@@ -18,8 +18,85 @@ class ChannelService:
         """Get standard headers for inter-service communication"""
         return {
             'Content-Type': 'application/json',
-            'X-Service-Name': 'telegive-giveaway'
+            'X-Service-Name': 'telegive-giveaway',
+            'X-Service-Token': 'ch4nn3l_s3rv1c3_t0k3n_2025_s3cur3_r4nd0m_str1ng'
         }
+    
+    @staticmethod
+    def get_channel_config(account_id: int) -> Dict:
+        """
+        Get channel configuration for account from Channel Service
+        
+        Args:
+            account_id: Account ID
+            
+        Returns:
+            Dict with channel configuration
+        """
+        try:
+            # Use the correct Channel Service URL and endpoint
+            channel_url = current_app.config.get('TELEGIVE_CHANNEL_URL', 'https://telegive-channel-production.up.railway.app')
+            url = f"{channel_url}/api/accounts/{account_id}/channel"
+            
+            logger.info(f"Getting channel config for account {account_id} from {url}")
+            
+            response = requests.get(
+                url,
+                headers=ChannelService.get_service_headers(),
+                timeout=10
+            )
+            
+            logger.info(f"Channel Service response status: {response.status_code}")
+            
+            if response.ok:
+                data = response.json()
+                logger.info(f"Channel config retrieved successfully for account {account_id}")
+                
+                # Extract the config from the response
+                config = data.get('config', {})
+                if config:
+                    logger.info(f"Channel config details: username={config.get('username')}, verified={config.get('isVerified')}, adminRights={config.get('botHasAdminRights')}")
+                    return {
+                        'success': True,
+                        'config': config
+                    }
+                else:
+                    logger.warning(f"No channel config found for account {account_id}")
+                    return {
+                        'success': False,
+                        'error': 'Channel not configured',
+                        'error_code': 'CHANNEL_NOT_CONFIGURED'
+                    }
+            elif response.status_code == 404:
+                logger.warning(f"Channel config not found for account {account_id}")
+                return {
+                    'success': False,
+                    'error': 'Channel not configured',
+                    'error_code': 'CHANNEL_NOT_CONFIGURED'
+                }
+            else:
+                error_text = response.text
+                logger.error(f"Channel config retrieval failed: {response.status_code} - {error_text}")
+                return {
+                    'success': False,
+                    'error': f'Channel Service error: {response.status_code}',
+                    'error_code': 'CHANNEL_SERVICE_ERROR'
+                }
+                
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Channel service request failed: {e}")
+            return {
+                'success': False,
+                'error': 'Channel service unavailable',
+                'error_code': 'CHANNEL_SERVICE_UNAVAILABLE'
+            }
+        except Exception as e:
+            logger.error(f"Unexpected error in channel config retrieval: {e}")
+            return {
+                'success': False,
+                'error': 'Internal error during channel config retrieval',
+                'error_code': 'INTERNAL_ERROR'
+            }
     
     @staticmethod
     def get_permissions(account_id: int) -> Dict:
@@ -218,11 +295,19 @@ class ChannelService:
             Boolean indicating service health
         """
         try:
-            channel_url = current_app.config['TELEGIVE_CHANNEL_URL']
+            # Use the correct Channel Service URL
+            channel_url = current_app.config.get('TELEGIVE_CHANNEL_URL', 'https://telegive-channel-production.up.railway.app')
             url = f"{channel_url}/health"
             
             response = requests.get(url, timeout=5)
-            return response.ok and response.json().get('status') == 'healthy'
+            if response.ok:
+                # Try to get JSON response, fallback to status code check
+                try:
+                    data = response.json()
+                    return data.get('status') == 'healthy' or data.get('alive', False)
+                except:
+                    return True  # If no JSON, but 200 OK, consider healthy
+            return False
             
         except Exception as e:
             logger.error(f"Channel service health check failed: {e}")

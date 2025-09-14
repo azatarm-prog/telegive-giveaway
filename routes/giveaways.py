@@ -260,13 +260,22 @@ def publish_giveaway(giveaway_id):
                 'error_code': 'CANNOT_PUBLISH'
             }), 400
         
-        # Validate channel permissions
-        channel_validation = ChannelService.validate_channel_setup(giveaway.account_id)
-        if not channel_validation.get('success', False):
+        # Get channel configuration from Channel Service
+        channel_result = ChannelService.get_channel_config(giveaway.account_id)
+        if not channel_result.get('success', False):
             return jsonify({
                 'success': False,
-                'error': channel_validation.get('error', 'Channel validation failed'),
-                'error_code': channel_validation.get('error_code', 'CHANNEL_VALIDATION_FAILED')
+                'error': channel_result.get('error', 'Channel configuration failed'),
+                'error_code': channel_result.get('error_code', 'CHANNEL_PERMISSIONS_FAILED')
+            }), 400
+        
+        # Verify channel is properly configured
+        channel_config = channel_result.get('config', {})
+        if not channel_config.get('isVerified') or not channel_config.get('botHasAdminRights'):
+            return jsonify({
+                'success': False,
+                'error': 'Channel not properly verified or bot lacks admin rights',
+                'error_code': 'CHANNEL_NOT_VERIFIED'
             }), 400
         
         # Get media file URL if media is attached
