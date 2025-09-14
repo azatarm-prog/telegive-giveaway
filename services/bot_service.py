@@ -18,13 +18,162 @@ class BotService:
         """Get standard headers for inter-service communication"""
         return {
             'Content-Type': 'application/json',
-            'X-Service-Name': 'telegive-giveaway'
+            'X-Service-Name': 'telegive-giveaway',
+            'X-Service-Token': 'ch4nn3l_s3rv1c3_t0k3n_2025_s3cur3_r4nd0m_str1ng'
         }
+    
+    @staticmethod
+    def get_bot_token(account_id: int) -> Dict:
+        """
+        Get bot token for account from Auth Service
+        
+        Args:
+            account_id: Account ID
+            
+        Returns:
+            Dict with bot token or error
+        """
+        try:
+            # Use Auth Service to get bot token
+            auth_url = current_app.config.get('TELEGIVE_AUTH_URL', 'https://web-production-ddd7e.up.railway.app')
+            url = f"{auth_url}/api/accounts/{account_id}"
+            
+            logger.info(f"Getting bot token for account {account_id} from {url}")
+            
+            response = requests.get(
+                url,
+                headers=BotService.get_service_headers(),
+                timeout=10
+            )
+            
+            logger.info(f"Auth Service response status: {response.status_code}")
+            
+            if response.ok:
+                data = response.json()
+                bot_token = data.get('bot_token')
+                
+                if bot_token:
+                    logger.info(f"Bot token retrieved successfully for account {account_id}")
+                    return {
+                        'success': True,
+                        'bot_token': bot_token,
+                        'bot_id': data.get('bot_id'),
+                        'username': data.get('username')
+                    }
+                else:
+                    logger.warning(f"No bot token found for account {account_id}")
+                    return {
+                        'success': False,
+                        'error': 'Bot token not found for account',
+                        'error_code': 'BOT_TOKEN_NOT_FOUND'
+                    }
+            elif response.status_code == 404:
+                logger.warning(f"Account {account_id} not found in Auth Service")
+                return {
+                    'success': False,
+                    'error': 'Account not found',
+                    'error_code': 'ACCOUNT_NOT_FOUND'
+                }
+            else:
+                error_text = response.text
+                logger.error(f"Bot token retrieval failed: {response.status_code} - {error_text}")
+                return {
+                    'success': False,
+                    'error': f'Auth Service error: {response.status_code}',
+                    'error_code': 'AUTH_SERVICE_ERROR'
+                }
+                
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Auth service request failed: {e}")
+            return {
+                'success': False,
+                'error': 'Auth service unavailable',
+                'error_code': 'AUTH_SERVICE_UNAVAILABLE'
+            }
+        except Exception as e:
+            logger.error(f"Unexpected error in bot token retrieval: {e}")
+            return {
+                'success': False,
+                'error': 'Internal error during bot token retrieval',
+                'error_code': 'INTERNAL_ERROR'
+            }
+    
+    @staticmethod
+    def post_to_telegram_direct(bot_token: str, chat_id: str, message: str, reply_markup: Optional[Dict] = None) -> Dict:
+        """
+        Post message directly to Telegram using bot token
+        
+        Args:
+            bot_token: Telegram bot token
+            chat_id: Chat ID or channel username (e.g., @channelname)
+            message: Message text
+            reply_markup: Optional inline keyboard markup
+            
+        Returns:
+            Dict with posting results
+        """
+        try:
+            telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            
+            payload = {
+                'chat_id': chat_id,
+                'text': message,
+                'parse_mode': 'HTML'
+            }
+            
+            if reply_markup:
+                payload['reply_markup'] = reply_markup
+            
+            logger.info(f"Posting message to Telegram: chat_id={chat_id}, message_length={len(message)}")
+            
+            response = requests.post(
+                telegram_url,
+                json=payload,
+                timeout=30
+            )
+            
+            result = response.json()
+            
+            logger.info(f"Telegram API response: ok={result.get('ok')}, message_id={result.get('result', {}).get('message_id')}")
+            
+            if result.get('ok'):
+                message_data = result.get('result', {})
+                return {
+                    'success': True,
+                    'message_id': message_data.get('message_id'),
+                    'date': message_data.get('date'),
+                    'chat': message_data.get('chat', {}),
+                    'telegram_response': result
+                }
+            else:
+                error_description = result.get('description', 'Unknown Telegram API error')
+                logger.error(f"Telegram API error: {error_description}")
+                return {
+                    'success': False,
+                    'error': f'Telegram API error: {error_description}',
+                    'error_code': 'TELEGRAM_API_ERROR',
+                    'telegram_response': result
+                }
+                
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Telegram API request failed: {e}")
+            return {
+                'success': False,
+                'error': 'Telegram API unavailable',
+                'error_code': 'TELEGRAM_API_UNAVAILABLE'
+            }
+        except Exception as e:
+            logger.error(f"Unexpected error in Telegram posting: {e}")
+            return {
+                'success': False,
+                'error': 'Internal error during Telegram posting',
+                'error_code': 'INTERNAL_ERROR'
+            }
     
     @staticmethod
     def post_giveaway_message(account_id: int, giveaway_data: Dict) -> Dict:
         """
-        Post giveaway message to Telegram channel
+        Post giveaway message to Telegram channel using direct API
         
         Args:
             account_id: Account ID
@@ -34,52 +183,108 @@ class BotService:
             Dict with posting results
         """
         try:
-            bot_url = current_app.config['TELEGIVE_BOT_URL']
-            url = f"{bot_url}/api/messages/giveaway"
+            logger.info(f"🚀 Publishing giveaway {giveaway_data.get('id')} for account {account_id}")
             
-            payload = {
-                'account_id': account_id,
-                'giveaway_id': giveaway_data.get('id'),
-                'main_body': giveaway_data.get('main_body'),
-                'winner_count': giveaway_data.get('winner_count'),
-                'participation_button_text': giveaway_data.get('participation_button_text', 'Participate'),
-                'result_token': giveaway_data.get('result_token'),
-                'media_file_id': giveaway_data.get('media_file_id')
-            }
+            # 1. Get bot token from Auth Service
+            token_result = BotService.get_bot_token(account_id)
+            if not token_result.get('success'):
+                logger.error(f"Failed to get bot token: {token_result.get('error')}")
+                return token_result
             
-            response = requests.post(
-                url,
-                json=payload,
-                headers=BotService.get_service_headers(),
-                timeout=30
-            )
+            bot_token = token_result.get('bot_token')
+            logger.info(f"✅ Bot token retrieved for account {account_id}")
             
-            if response.ok:
-                data = response.json()
-                logger.info(f"Giveaway message posted for account {account_id}: message_id {data.get('message_id')}")
-                return data
-            else:
-                logger.error(f"Giveaway message posting failed: {response.status_code}")
+            # 2. Get channel configuration (we need the channel username)
+            from .channel_service import ChannelService
+            channel_result = ChannelService.get_channel_config(account_id)
+            if not channel_result.get('success'):
+                logger.error(f"Failed to get channel config: {channel_result.get('error')}")
                 return {
                     'success': False,
-                    'error': f'Message posting failed: {response.status_code}',
-                    'error_code': 'MESSAGE_POSTING_FAILED'
+                    'error': 'Channel configuration failed',
+                    'error_code': 'CHANNEL_CONFIG_FAILED'
                 }
-                
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Bot service request failed: {e}")
-            return {
-                'success': False,
-                'error': 'Bot service unavailable',
-                'error_code': 'BOT_SERVICE_UNAVAILABLE'
+            
+            channel_config = channel_result.get('config', {})
+            channel_username = channel_config.get('username')
+            if not channel_username:
+                logger.error("Channel username not found in config")
+                return {
+                    'success': False,
+                    'error': 'Channel username not found',
+                    'error_code': 'CHANNEL_USERNAME_MISSING'
+                }
+            
+            logger.info(f"✅ Channel config retrieved: {channel_username}")
+            
+            # 3. Create giveaway message
+            message = BotService.create_giveaway_message(giveaway_data)
+            
+            # 4. Create inline keyboard for participation
+            reply_markup = {
+                'inline_keyboard': [[
+                    {
+                        'text': giveaway_data.get('participation_button_text', '🎁 Join Giveaway'),
+                        'url': f"https://t.me/your_bot?start=join_{giveaway_data.get('result_token', giveaway_data.get('id'))}"
+                    }
+                ]]
             }
+            
+            # 5. Post to Telegram
+            result = BotService.post_to_telegram_direct(
+                bot_token=bot_token,
+                chat_id=channel_username,
+                message=message,
+                reply_markup=reply_markup
+            )
+            
+            if result.get('success'):
+                logger.info(f"✅ Giveaway message posted successfully: message_id {result.get('message_id')}")
+                return {
+                    'success': True,
+                    'message_id': result.get('message_id'),
+                    'channel_username': channel_username,
+                    'telegram_url': f"https://t.me/{channel_username.replace('@', '')}/{result.get('message_id')}",
+                    'telegram_response': result.get('telegram_response')
+                }
+            else:
+                logger.error(f"❌ Telegram posting failed: {result.get('error')}")
+                return result
+                
         except Exception as e:
-            logger.error(f"Unexpected error in message posting: {e}")
+            logger.error(f"Unexpected error in giveaway message posting: {e}")
             return {
                 'success': False,
-                'error': 'Internal error during message posting',
+                'error': 'Internal error during giveaway message posting',
                 'error_code': 'INTERNAL_ERROR'
             }
+    
+    @staticmethod
+    def create_giveaway_message(giveaway_data: Dict) -> str:
+        """
+        Create formatted giveaway message for Telegram
+        
+        Args:
+            giveaway_data: Giveaway data
+            
+        Returns:
+            Formatted message string
+        """
+        title = giveaway_data.get('title', 'Giveaway')
+        main_body = giveaway_data.get('main_body', '')
+        winner_count = giveaway_data.get('winner_count', 1)
+        
+        # Format the message
+        message = f"🎁 <b>{title}</b>\n\n"
+        
+        if main_body:
+            message += f"{main_body}\n\n"
+        
+        message += f"🏆 <b>Winners:</b> {winner_count}\n"
+        message += f"⏰ <b>Status:</b> Active\n\n"
+        message += "Click the button below to join the giveaway!"
+        
+        return message
     
     @staticmethod
     def post_conclusion_message(account_id: int, giveaway_id: int, conclusion_message: str, winners: List[Dict]) -> Dict:
@@ -313,19 +518,27 @@ class BotService:
     @staticmethod
     def is_service_healthy() -> bool:
         """
-        Check if bot service is healthy
+        Check if auth service is healthy (for bot token access)
         
         Returns:
             Boolean indicating service health
         """
         try:
-            bot_url = current_app.config['TELEGIVE_BOT_URL']
-            url = f"{bot_url}/health"
+            # Check Auth Service health since we get bot tokens from there
+            auth_url = current_app.config.get('TELEGIVE_AUTH_URL', 'https://web-production-ddd7e.up.railway.app')
+            url = f"{auth_url}/health"
             
             response = requests.get(url, timeout=5)
-            return response.ok and response.json().get('status') == 'healthy'
+            if response.ok:
+                # Try to get JSON response, fallback to status code check
+                try:
+                    data = response.json()
+                    return data.get('status') == 'healthy' or data.get('alive', False)
+                except:
+                    return True  # If no JSON, but 200 OK, consider healthy
+            return False
             
         except Exception as e:
-            logger.error(f"Bot service health check failed: {e}")
+            logger.error(f"Auth service health check failed: {e}")
             return False
 
