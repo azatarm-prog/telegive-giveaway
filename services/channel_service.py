@@ -117,7 +117,7 @@ class ChannelService:
             Dict with permissions info
         """
         try:
-            channel_url = current_app.config['TELEGIVE_CHANNEL_URL']
+            channel_url = current_app.config.get('TELEGIVE_CHANNEL_URL', 'https://telegive-channel-production.up.railway.app')
             url = f"{channel_url}/api/channels/{account_id}/permissions"
             
             response = requests.get(
@@ -203,7 +203,7 @@ class ChannelService:
             Dict with channel info
         """
         try:
-            channel_url = current_app.config['TELEGIVE_CHANNEL_URL']
+            channel_url = current_app.config.get('TELEGIVE_CHANNEL_URL', 'https://telegive-channel-production.up.railway.app')
             url = f"{channel_url}/api/channels/{account_id}"
             
             response = requests.get(
