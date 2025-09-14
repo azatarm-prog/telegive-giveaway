@@ -50,22 +50,33 @@ class BotService:
             
             if response.ok:
                 data = response.json()
-                bot_token = data.get('bot_token')
                 
-                if bot_token:
-                    logger.info(f"Bot token retrieved successfully for account {account_id}")
-                    return {
-                        'success': True,
-                        'bot_token': bot_token,
-                        'bot_id': data.get('bot_id'),
-                        'username': data.get('username')
-                    }
+                # Extract the account from the response (actual format)
+                account = data.get('account', {})
+                if account:
+                    bot_token = account.get('bot_token')
+                    
+                    if bot_token:
+                        logger.info(f"Bot token retrieved successfully for account {account_id}")
+                        return {
+                            'success': True,
+                            'bot_token': bot_token,
+                            'bot_id': account.get('bot_id'),
+                            'username': account.get('username')
+                        }
+                    else:
+                        logger.warning(f"No bot token found for account {account_id}")
+                        return {
+                            'success': False,
+                            'error': 'Bot token not found for account',
+                            'error_code': 'BOT_TOKEN_NOT_FOUND'
+                        }
                 else:
-                    logger.warning(f"No bot token found for account {account_id}")
+                    logger.warning(f"No account data found for account {account_id}")
                     return {
                         'success': False,
-                        'error': 'Bot token not found for account',
-                        'error_code': 'BOT_TOKEN_NOT_FOUND'
+                        'error': 'Account data not found',
+                        'error_code': 'ACCOUNT_DATA_NOT_FOUND'
                     }
             elif response.status_code == 404:
                 logger.warning(f"Account {account_id} not found in Auth Service")
