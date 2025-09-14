@@ -244,7 +244,7 @@ class BotService:
             reply_markup = {
                 'inline_keyboard': [[
                     {
-                        'text': giveaway_data.get('participation_button_text', '🎁 Join Giveaway'),
+                        'text': giveaway_data.get('participation_button_text', '🎯 Participate'),
                         'url': participation_url
                     }
                 ]]
