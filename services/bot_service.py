@@ -203,7 +203,13 @@ class BotService:
                 return token_result
             
             bot_token = token_result.get('bot_token')
+            bot_username = token_result.get('username')
             logger.info(f"✅ Bot token retrieved for account {account_id}")
+            logger.info(f"✅ Bot username: {bot_username}")
+            
+            if not bot_username:
+                logger.warning(f"Bot username not found for account {account_id}, using bot ID as fallback")
+                bot_username = f"bot{token_result.get('bot_id', account_id)}"
             
             # 2. Get channel configuration (we need the channel username)
             from .channel_service import ChannelService
@@ -231,12 +237,15 @@ class BotService:
             # 3. Create giveaway message
             message = BotService.create_giveaway_message(giveaway_data)
             
-            # 4. Create inline keyboard for participation
+            # 4. Create inline keyboard for participation with actual bot username
+            participation_url = f"https://t.me/{bot_username}?start=giveaway_{giveaway_data.get('id')}"
+            logger.info(f"🔗 Participation URL: {participation_url}")
+            
             reply_markup = {
                 'inline_keyboard': [[
                     {
                         'text': giveaway_data.get('participation_button_text', '🎁 Join Giveaway'),
-                        'url': f"https://t.me/your_bot?start=join_{giveaway_data.get('result_token', giveaway_data.get('id'))}"
+                        'url': participation_url
                     }
                 ]]
             }
@@ -255,6 +264,8 @@ class BotService:
                     'success': True,
                     'message_id': result.get('message_id'),
                     'channel_username': channel_username,
+                    'bot_username': bot_username,
+                    'participation_url': participation_url,
                     'telegram_url': f"https://t.me/{channel_username.replace('@', '')}/{result.get('message_id')}",
                     'telegram_response': result.get('telegram_response')
                 }
